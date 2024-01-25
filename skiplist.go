@@ -187,30 +187,32 @@ func (sl *SkipList[T]) Delete(key T) {
 }
 
 func (sl *SkipList[T]) Search(target T) any {
-	defer func() {
-		fmt.Println("end Search for:", target)
-		fmt.Println("---------------------")
-	}()
+	// FIXME: make this debugging to stdout an optional thing
+	// defer func() {
+	// 	fmt.Println("end Search for:", target)
+	// 	fmt.Println("---------------------")
+	// }()
 	var current forwarder[T]
 
 	current = sl.head
-	fmt.Println("beginning Search for:", target)
-	fmt.Println("debugging print of structure:")
-	fmt.Println(sl.String())
+	// fmt.Println("beginning Search for:", target)
+	// fmt.Println("debugging print of structure:")
+	// fmt.Println(sl.String())
 	for lvl := sl.level; lvl >= 0; lvl-- {
-		fmt.Printf("\nL%v\t", lvl)
+		// fmt.Printf("\nL%v\t", lvl)
 		for current.next(lvl) != nil && current.next(lvl).key <= target {
 			current = current.next(lvl)
 			node := current.(*Node[T])
-			fmt.Printf("->(%v)\t", node.key)
+			// fmt.Printf("->(%v)", node.key)
 			if node.key == target {
-				fmt.Println("successfully found:", target)
+				// fmt.Println("\tSUCCESS! 🐸")
 				return node.value
 			}
 		}
+		// fmt.Printf("↓")
 	}
 
-	fmt.Println("did not find:", target)
+	// fmt.Println("\tFAILURE 😦")
 	return nil
 }
 
@@ -263,9 +265,10 @@ func (sl *SkipList[T]) String() string {
 
 	// Reverse the slice and concatenate the strings for each level
 	var builder strings.Builder
-	for i := sl.level; i >= 0; i-- {
+	for i := sl.level; i > 0; i-- {
 		builder.WriteString(fmt.Sprintf("L%d: %s\n", i, levelStrings[i]))
 	}
+	builder.WriteString(fmt.Sprintf("L%d: %s", 0, levelStrings[0])) // omit newline from end
 
 	return builder.String()
 }

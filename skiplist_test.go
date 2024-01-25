@@ -68,7 +68,7 @@ func TestSkipList_InsertSearchInt(t *testing.T) {
 		iterations int
 	}{
 		{"defined set {-3,0,5,7,10,14,15}", runSkipListTest_StaticInsertSearchInt, 1000},
-		{"randomly generated set of 64-1024 values", runSkipListTest_RandomInsertSearchInt, 10},
+		{"randomly generated set of 2^16 values", runSkipListTest_RandomInsertSearchInt, 10},
 	}
 
 	for _, tt := range tests {
@@ -81,11 +81,13 @@ func TestSkipList_InsertSearchInt(t *testing.T) {
 }
 
 func runSkipListTest_RandomInsertSearchInt(t *testing.T, iteration int) {
-	list := NewSkipList[int](10) // Sufficiently large max level
+	maxLevel := 10
+	list := NewSkipList[int](uint(maxLevel)) // Sufficiently large max level
 
 	// Generate random insertionArgs
-	numElements := rand.Intn(961) + 64 // Random number between 64 and 1024
-	randomInts := generateRandomInts(numElements, -1000, 1000)
+	// numElements := rand.Intn(961) + 64 // Random number between 64 and 1024
+	numElements := 65536
+	randomInts := generateRandomInts(numElements, -1000000, 1000000)
 	var values []insertionArgs
 	for _, key := range randomInts {
 		values = append(values, insertionArgs{key: key, value: strconv.Itoa(key)})
@@ -94,6 +96,11 @@ func runSkipListTest_RandomInsertSearchInt(t *testing.T, iteration int) {
 	// Insert values into the skip list
 	for _, v := range values {
 		list.Insert(v.key, v.value)
+	}
+
+	// check that we haven't exceeded headroom
+	if list.level == list.maxLevel {
+		t.Errorf("hit maxLevel (height) with %d elements", numElements)
 	}
 
 	// Generate expected ordering by sorting the keys
@@ -107,8 +114,8 @@ func runSkipListTest_RandomInsertSearchInt(t *testing.T, iteration int) {
 		actualOrdering = append(actualOrdering, elem.key)
 	}
 	if diff := deep.Equal(expectedOrdering, actualOrdering); diff != nil {
-		t.Logf("Iteration %d:\n%s", iteration, list)
-		t.Errorf("Incorrect insertion order: %v", diff)
+		t.Logf("Iteration %d:\n%v\n%v\n", iteration, expectedOrdering, expectedOrdering)
+		t.Errorf("Iteration: %d\t Incorrect insertion order: %v", iteration, diff)
 	}
 
 	// Check search functionality
@@ -133,14 +140,6 @@ func generateRandomInts(n int, min int, max int) []int {
 	}
 
 	return nums
-}
-
-func intToStringSlice(ints []int) []string {
-	var strs []string
-	for _, i := range ints {
-		strs = append(strs, strconv.Itoa(i))
-	}
-	return strs
 }
 
 func TestSkipList_UpdateInPlace(t *testing.T) {
