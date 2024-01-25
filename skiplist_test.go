@@ -81,13 +81,12 @@ func TestSkipList_InsertSearchInt(t *testing.T) {
 }
 
 func runSkipListTest_RandomInsertSearchInt(t *testing.T, iteration int) {
-	maxLevel := 10
-	list := NewSkipList[int](uint(maxLevel)) // Sufficiently large max level
+	maxLevelHeight := uint(10)
+	list := NewSkipList[int](maxLevelHeight) // Sufficiently large max level
 
-	// Generate random insertionArgs
-	// numElements := rand.Intn(961) + 64 // Random number between 64 and 1024
-	numElements := 65536
-	randomInts := generateRandomInts(numElements, -1000000, 1000000)
+	// Generate 2^16 random entries to the skip list
+	scale := 65536
+	randomInts := generateRandomInts(scale, -1000000, 1000000)
 	var values []insertionArgs
 	for _, key := range randomInts {
 		values = append(values, insertionArgs{key: key, value: strconv.Itoa(key)})
@@ -100,7 +99,7 @@ func runSkipListTest_RandomInsertSearchInt(t *testing.T, iteration int) {
 
 	// check that we haven't exceeded headroom
 	if list.level == list.maxLevel {
-		t.Errorf("hit maxLevel (height) with %d elements", numElements)
+		t.Errorf("hit maxLevel (height) with %d elements", scale)
 	}
 
 	// Generate expected ordering by sorting the keys
